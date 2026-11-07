@@ -1,0 +1,607 @@
+/* ==========================================================
+   SÚPER BARRIO – Sistema de stock
+   Diseño mobile first: base para celular, mejoras desde 768 px
+   ========================================================== */
+
+/* 1. FUENTES -------------------------------------------------
+   Poppins (títulos) e Inter (texto) desde Google Fonts.
+   Si no hay internet, el navegador usa system-ui. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap");
+
+/* 2. VARIABLES ----------------------------------------------- */
+:root {
+  /* Marca */
+  --color-principal: #D99A00;
+  --color-principal-oscuro: #B07B00;
+  --color-principal-claro: #FFF4D6;
+
+  /* Estados del stock */
+  --color-ok: #2E9E4F;
+  --color-ok-fondo: #E4F5EA;
+  --color-bajo: #F08A24;
+  --color-bajo-fondo: #FDEBD8;
+  --color-sin: #D93025;
+  --color-sin-fondo: #FBE3E1;
+
+  /* Neutros */
+  --fondo: #F4F5F7;
+  --superficie: #FFFFFF;
+  --texto: #1F2430;
+  --texto-suave: #6B7280;
+  --borde: #E3E6EB;
+
+  /* Forma y sombras */
+  --radio: 14px;
+  --radio-chico: 8px;
+  --sombra: 0 2px 10px rgba(31, 36, 48, 0.08);
+  --sombra-fuerte: 0 6px 16px rgba(31, 36, 48, 0.16);
+
+  /* Tipografía */
+  --fuente-titulos: "Poppins", system-ui, sans-serif;
+  --fuente-texto: "Inter", system-ui, sans-serif;
+
+  /* Espaciado */
+  --espacio: 16px;
+
+  /* Alto mínimo para tocar con el dedo */
+  --alto-tactil: 44px;
+}
+
+/* 3. BASE ---------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--texto);
+  background: var(--fondo);
+}
+
+h1, h2, h3 {
+  font-family: var(--fuente-titulos);
+  line-height: 1.2;
+  margin: 0 0 var(--espacio);
+}
+
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.1rem; margin-top: 28px; }
+
+/* 4. ENCABEZADO ---------------------------------------------- */
+.encabezado {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: var(--espacio);
+  background: var(--color-principal);
+  color: #fff;
+}
+
+.logo {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.logo::before { content: "🛒 "; }
+
+.logo-sub {
+  display: block;
+  font-family: var(--fuente-texto);
+  font-size: 0.85rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.acciones-datos {
+  display: flex;
+  gap: 8px;
+}
+
+/* Botones Exportar / Importar: translúcidos sobre el amarillo */
+.acciones-datos button {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: none;
+}
+
+.acciones-datos button:hover {
+  background: #fff;
+  color: var(--color-principal-oscuro);
+}
+
+#btn-exportar::before { content: "📤 "; }
+#btn-importar::before { content: "📥 "; }
+
+/* 5. MENÚ DE NAVEGACIÓN -------------------------------------- */
+.menu {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 6px;
+  padding: 8px var(--espacio);
+  overflow-x: auto;
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+}
+
+.menu-btn {
+  flex: 1 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--texto);
+  box-shadow: none;
+  border: 1px solid transparent;
+}
+
+.menu-btn:hover {
+  background: var(--color-principal-claro);
+  color: var(--color-principal-oscuro);
+}
+
+.menu-btn.activo {
+  background: var(--color-principal);
+  color: #fff;
+}
+
+/* Íconos del menú con emojis */
+.menu-btn[data-seccion="productos"]::before   { content: "📦"; }
+.menu-btn[data-seccion="movimientos"]::before { content: "🔄"; }
+.menu-btn[data-seccion="alertas"]::before     { content: "🔔"; }
+.menu-btn[data-seccion="categorias"]::before  { content: "🏷️"; }
+
+/* Contador de alertas: círculo rojo con número */
+.contador {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 50%;
+  background: var(--color-sin);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* El contador se oculta cuando no hay alertas */
+.contador[hidden] { display: none; }
+
+/* 6. SECCIONES ----------------------------------------------- */
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--espacio);
+}
+
+/* Solo se ve la sección activa (la cambia el JS con la clase .activa) */
+.seccion { display: none; }
+.seccion.activa { display: block; }
+
+#productos h2::before   { content: "📦 "; }
+#movimientos h2::before { content: "🔄 "; }
+#alertas h2::before     { content: "🔔 "; }
+#categorias h2::before  { content: "🏷️ "; }
+
+/* 7. FORMULARIOS COMO TARJETAS ------------------------------- */
+form,
+.barra-filtros {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);      /* mobile: una columna */
+  gap: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: var(--superficie);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;                    /* evita que un campo ensanche la pantalla */
+}
+
+label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  max-width: 100%;
+  min-height: var(--alto-tactil);
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--texto);
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-chico);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-principal);
+  box-shadow: 0 0 0 3px rgba(217, 154, 0, 0.25);
+}
+
+textarea { resize: vertical; }
+
+.botones-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* 8. BOTONES ------------------------------------------------- */
+button {
+  min-width: var(--alto-tactil);
+  min-height: var(--alto-tactil);
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 18px;
+  color: #fff;
+  background: var(--color-principal);
+  border: none;
+  border-radius: var(--radio-chico);
+  box-shadow: var(--sombra);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+/* Hover: cambia el color y se eleva levemente */
+button:hover {
+  background: var(--color-principal-oscuro);
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-fuerte);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: var(--sombra);
+}
+
+button:focus-visible {
+  outline: 3px solid rgba(217, 154, 0, 0.45);
+  outline-offset: 2px;
+}
+
+form button[type="submit"]::before { content: "💾 "; }
+
+/* Botón secundario (Limpiar) */
+button[type="reset"] {
+  color: var(--texto);
+  background: #E9ECF0;
+}
+
+button[type="reset"]:hover {
+  background: #D9DDE3;
+}
+
+/* Botones chicos dentro de tablas y listas (los usa el JS) */
+.btn-editar,
+.btn-peligro {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+.btn-editar::before  { content: "✏️ "; }
+.btn-peligro         { background: var(--color-sin); }
+.btn-peligro:hover   { background: #B3261E; }
+.btn-peligro::before { content: "🗑️ "; }
+
+/* 9. TABLAS -------------------------------------------------- */
+/* En celular la tabla se desliza horizontalmente dentro de su tarjeta */
+.tabla-contenedor {
+  overflow-x: auto;
+  background: var(--superficie);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+th, td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--borde);
+  white-space: nowrap;
+}
+
+th {
+  font-family: var(--fuente-titulos);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-principal-oscuro);
+  background: var(--color-principal-claro);
+}
+
+tbody tr:hover { background: #FAFAFB; }
+tbody tr:last-child td { border-bottom: none; }
+
+/* 10. INDICADORES DE ESTADO DEL STOCK ------------------------
+   El JS agrega a un <span class="estado"> una de estas clases:
+   estado-ok (🟢 normal), estado-bajo (🟠 bajo el mínimo),
+   estado-sin (🔴 sin stock). */
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.estado::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.estado-ok   { color: var(--color-ok);   background: var(--color-ok-fondo); }
+.estado-bajo { color: var(--color-bajo); background: var(--color-bajo-fondo); }
+.estado-sin  { color: var(--color-sin);  background: var(--color-sin-fondo); }
+
+/* Tipo de movimiento en el historial */
+.tipo-entrada { color: var(--color-ok);  font-weight: 600; }
+.tipo-salida  { color: var(--color-sin); font-weight: 600; }
+.tipo-entrada::before { content: "⬆️ "; }
+.tipo-salida::before  { content: "⬇️ "; }
+
+/* 11. LISTAS COMO TARJETAS (alertas y categorías) ------------ */
+#lista-alertas,
+#lista-categorias {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);      /* mobile: una columna */
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#lista-alertas li,
+#lista-categorias li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--superficie);
+  border-radius: var(--radio);
+  border-left: 5px solid var(--color-principal);
+  box-shadow: var(--sombra);
+}
+
+/* Alertas según gravedad */
+#lista-alertas li.alerta-bajo { border-left-color: var(--color-bajo); }
+#lista-alertas li.alerta-sin  { border-left-color: var(--color-sin); }
+#lista-alertas li.alerta-bajo::before { content: "🟠"; }
+#lista-alertas li.alerta-sin::before  { content: "🔴"; }
+
+/* Cantidad sugerida para pedir (columna derecha de cada alerta) */
+.pedido {
+  text-align: right;
+  white-space: nowrap;
+  color: var(--texto-suave);
+}
+
+.pedido strong {
+  font-size: 1.1rem;
+  color: var(--texto);
+}
+
+/* Lista vacía: mensaje opcional que puede agregar el JS */
+.vacio {
+  padding: 24px;
+  text-align: center;
+  color: var(--texto-suave);
+}
+
+/* 12. PIE ---------------------------------------------------- */
+.pie {
+  padding: 20px var(--espacio);
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+.pie p { margin: 0; }
+
+/* 13. DESDE 768 px: DOS COLUMNAS ----------------------------- */
+@media (min-width: 768px) {
+
+  .encabezado {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+  }
+
+  .menu {
+    justify-content: center;
+    padding: 10px 32px;
+  }
+
+  .menu-btn { flex: 0 0 auto; }
+
+  main { padding: 32px; }
+
+  /* Formularios y filtros: dos columnas */
+  form,
+  .barra-filtros {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Campos o botones que ocupan todo el ancho */
+  .campo-ancho,
+  .botones-form {
+    grid-column: 1 / -1;
+  }
+
+  /* Listas de alertas y categorías: dos columnas */
+  #lista-alertas,
+  #lista-categorias {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  table { min-width: 0; }
+}
+
+/* 14. CELULAR (menos de 768 px): tablas como tarjetas, sin scroll horizontal */
+@media (max-width: 767px) {
+
+  .tabla-contenedor {
+    overflow: visible;
+    background: none;
+    box-shadow: none;
+  }
+
+  table,
+  tbody,
+  tr {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Encabezados ocultos a la vista, pero disponibles para lectores de pantalla */
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  tbody tr {
+    margin-bottom: 12px;
+    overflow: hidden;
+    background: var(--superficie);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+  }
+
+  td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    text-align: right;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Fila de "sin datos": un solo bloque centrado */
+  td.vacio { display: block; text-align: center; }
+
+  /* Etiqueta de cada dato (reemplaza al encabezado de la tabla) */
+  #tabla-productos td::before,
+  #tabla-movimientos td::before {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--texto-suave);
+  }
+
+  #tabla-productos td:nth-child(1)::before   { content: "Código"; }
+  #tabla-productos td:nth-child(2)::before   { content: "Nombre"; }
+  #tabla-productos td:nth-child(3)::before   { content: "Categoría"; }
+  #tabla-productos td:nth-child(4)::before   { content: "Precio"; }
+  #tabla-productos td:nth-child(5)::before   { content: "Stock actual"; }
+  #tabla-productos td:nth-child(6)::before   { content: "Stock mínimo"; }
+  #tabla-productos td:nth-child(7)::before   { content: "Estado"; }
+  #tabla-movimientos td:nth-child(1)::before { content: "Fecha"; }
+  #tabla-movimientos td:nth-child(2)::before { content: "Código"; }
+  #tabla-movimientos td:nth-child(3)::before { content: "Producto"; }
+  #tabla-movimientos td:nth-child(4)::before { content: "Tipo"; }
+  #tabla-movimientos td:nth-child(5)::before { content: "Motivo"; }
+  #tabla-movimientos td:nth-child(6)::before { content: "Cantidad"; }
+  #tabla-movimientos td:nth-child(7)::before { content: "Observación"; }
+  #tabla-productos td.vacio::before,
+  #tabla-movimientos td.vacio::before        { content: none; }
+
+  /* Última celda de productos = botones Editar / Eliminar */
+  #tabla-productos td:last-child {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+/* 15. CELULAR CHICO (menos de 600 px): menú como barra fija abajo */
+@media (max-width: 599px) {
+
+  /* Deja lugar para que la barra no tape el final de la página */
+  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+
+  .menu {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    gap: 4px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    overflow: visible;
+    border-top: 1px solid var(--borde);
+    box-shadow: 0 -2px 10px rgba(31, 36, 48, 0.1);
+  }
+
+  /* Cuatro botones iguales, ícono arriba y texto abajo */
+  .menu-btn {
+    position: relative;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    min-height: 56px;
+    padding: 6px 2px;
+    font-size: 0.7rem;
+  }
+
+  .menu-btn::before {
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+
+  /* El círculo rojo se apoya sobre la esquina del ícono de Alertas */
+  .menu-btn .contador {
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    min-width: 20px;
+    height: 20px;
+    margin-left: 6px;
+  }
+}

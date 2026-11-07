@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Súper Barrio – Sistema de stock</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#D99A00">
+  <link rel="apple-touch-icon" href="icono-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="encabezado">
+    <h1 class="logo">Súper Barrio <span class="logo-sub">Sistema de stock</span></h1>
+
+    <div class="acciones-datos">
+      <button type="button" id="btn-exportar">Exportar</button>
+      <button type="button" id="btn-importar">Importar</button>
+      <input type="file" id="archivo-importar" accept=".json,application/json" hidden>
+    </div>
+  </header>
+
+  <nav class="menu" aria-label="Secciones">
+    <button type="button" class="menu-btn activo" data-seccion="productos">Productos</button>
+    <button type="button" class="menu-btn" data-seccion="movimientos">Movimientos</button>
+    <button type="button" class="menu-btn" data-seccion="alertas">
+      Alertas <span id="contador-alertas" class="contador">0</span>
+    </button>
+    <button type="button" class="menu-btn" data-seccion="categorias">Categorías</button>
+  </nav>
+
+  <main>
+
+    <!-- PRODUCTOS -->
+    <section id="productos" class="seccion activa">
+      <h2>Productos</h2>
+
+      <form id="form-producto" autocomplete="off">
+        <input type="hidden" id="producto-editando">
+
+        <div class="campo">
+          <label for="prod-codigo">Código</label>
+          <input type="text" id="prod-codigo" inputmode="numeric" minlength="8" maxlength="13" pattern="[0-9]{8,13}" title="De 8 a 13 dígitos" required>
+        </div>
+
+        <div class="campo">
+          <label for="prod-nombre">Nombre</label>
+          <input type="text" id="prod-nombre" required>
+        </div>
+
+        <div class="campo">
+          <label for="prod-categoria">Categoría</label>
+          <select id="prod-categoria" required>
+            <option value="">Seleccionar…</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="prod-unidad">Unidad</label>
+          <select id="prod-unidad" required>
+            <option value="">Seleccionar…</option>
+            <option value="unidad">Unidad</option>
+            <option value="kg">Kilogramo</option>
+            <option value="g">Gramo</option>
+            <option value="l">Litro</option>
+            <option value="ml">Mililitro</option>
+            <option value="pack">Pack</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="prod-precio">Precio</label>
+          <input type="number" id="prod-precio" inputmode="decimal" min="0.01" step="0.01" required>
+        </div>
+
+        <div class="campo">
+          <label for="prod-stock">Stock inicial</label>
+          <input type="number" id="prod-stock" inputmode="numeric" min="0" step="1" required>
+        </div>
+
+        <div class="campo">
+          <label for="prod-minimo">Stock mínimo</label>
+          <input type="number" id="prod-minimo" inputmode="numeric" min="0" step="1" required>
+        </div>
+
+        <div class="botones-form">
+          <button type="submit">Guardar producto</button>
+          <button type="reset" id="cancelar-producto">Limpiar</button>
+        </div>
+      </form>
+
+      <div class="barra-filtros">
+        <div class="campo">
+          <label for="buscador">Buscar</label>
+          <input type="search" id="buscador" placeholder="Código o nombre">
+        </div>
+
+        <div class="campo">
+          <label for="filtro-categoria">Categoría</label>
+          <select id="filtro-categoria">
+            <option value="">Todas</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="filtro-estado">Estado</label>
+          <select id="filtro-estado">
+            <option value="">Todos</option>
+            <option value="ok">Normal</option>
+            <option value="bajo">Bajo</option>
+            <option value="sin">Sin stock</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tabla-contenedor">
+        <table id="tabla-productos">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Stock actual</th>
+              <th>Stock mínimo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MOVIMIENTOS -->
+    <section id="movimientos" class="seccion">
+      <h2>Movimientos</h2>
+
+      <form id="form-movimiento" autocomplete="off">
+        <div class="campo">
+          <label for="mov-codigo">Código</label>
+          <input type="text" id="mov-codigo" inputmode="numeric" list="lista-codigos" required>
+          <datalist id="lista-codigos"></datalist>
+        </div>
+
+        <div class="campo">
+          <label for="mov-tipo">Tipo</label>
+          <select id="mov-tipo" required>
+            <option value="">Seleccionar…</option>
+            <option value="entrada">Entrada</option>
+            <option value="salida">Salida</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="mov-motivo">Motivo</label>
+          <input type="text" id="mov-motivo" list="lista-motivos" required>
+          <datalist id="lista-motivos">
+            <option value="Compra a proveedor"></option>
+            <option value="Venta"></option>
+            <option value="Devolución"></option>
+            <option value="Merma"></option>
+            <option value="Vencimiento"></option>
+            <option value="Ajuste de inventario"></option>
+          </datalist>
+        </div>
+
+        <div class="campo">
+          <label for="mov-cantidad">Cantidad</label>
+          <input type="number" id="mov-cantidad" inputmode="decimal" min="0" step="any" required>
+        </div>
+
+        <div class="campo">
+          <label for="mov-fecha">Fecha</label>
+          <input type="date" id="mov-fecha" required>
+        </div>
+
+        <div class="campo campo-ancho">
+          <label for="mov-observacion">Observación</label>
+          <textarea id="mov-observacion" rows="2"></textarea>
+        </div>
+
+        <div class="botones-form">
+          <button type="submit">Registrar movimiento</button>
+          <button type="reset">Limpiar</button>
+        </div>
+      </form>
+
+      <h3>Historial</h3>
+      <div class="tabla-contenedor">
+        <table id="tabla-movimientos">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Código</th>
+              <th>Producto</th>
+              <th>Tipo</th>
+              <th>Motivo</th>
+              <th>Cantidad</th>
+              <th>Observación</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ALERTAS -->
+    <section id="alertas" class="seccion">
+      <h2>Alertas</h2>
+      <ul id="lista-alertas"></ul>
+    </section>
+
+    <!-- CATEGORÍAS -->
+    <section id="categorias" class="seccion">
+      <h2>Categorías</h2>
+
+      <form id="form-categoria" autocomplete="off">
+        <div class="campo">
+          <label for="cat-nombre">Nombre de la categoría</label>
+          <input type="text" id="cat-nombre" required>
+        </div>
+        <div class="botones-form">
+          <button type="submit">Agregar categoría</button>
+        </div>
+      </form>
+
+      <ul id="lista-categorias"></ul>
+    </section>
+
+  </main>
+
+  <footer class="pie">
+    <p>Súper Barrio · Sistema de stock (ficticio)</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
