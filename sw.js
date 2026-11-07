@@ -6,7 +6,7 @@
    ========================================================== */
 
 // Versión de la caché. Si la cambiás, el navegador instala un service worker nuevo.
-const VERSION = "v1";
+const VERSION = "v3";
 
 // Nombre de la caché: el prefijo identifica a esta app y la versión distingue cada edición.
 const NOMBRE_CACHE = "super-barrio-" + VERSION;

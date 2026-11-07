@@ -565,9 +565,9 @@
   }
 
   /* ---------- Exportar / Importar ---------- */
-  $("btn-exportar").addEventListener("click", function () {
-    var datos = { categorias: categorias, productos: productos, movimientos: movimientos };
-    var blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
+  // Descarga stock.json con un Blob y un enlace temporal (el método de siempre)
+  function descargarArchivo(texto) {
+    var blob = new Blob([texto], { type: "application/json" });
     var url = URL.createObjectURL(blob);
     var a = document.createElement("a");
     a.href = url;
@@ -576,6 +576,43 @@
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  }
+
+  // Devuelve el archivo que se puede compartir en este dispositivo, o null si no se puede.
+  // Solo en pantallas táctiles (celulares y tablets): en la computadora se descarga como siempre.
+  function archivoParaCompartir(texto) {
+    try {
+      if (!navigator.share || !navigator.canShare) return null;
+      if (!window.matchMedia("(pointer: coarse)").matches) return null;
+
+      // Primero el JSON; si el navegador no deja compartir ese tipo (Chrome en Android no lo
+      // permite), se prueba la misma copia como texto, que sí está permitido.
+      var candidatos = [
+        new File([texto], "stock.json", { type: "application/json" }),
+        new File([texto], "stock.json.txt", { type: "text/plain" })
+      ];
+      for (var i = 0; i < candidatos.length; i++) {
+        if (navigator.canShare({ files: [candidatos[i]] })) return candidatos[i];
+      }
+    } catch (e) { /* si algo falla, se descarga */ }
+    return null;
+  }
+
+  $("btn-exportar").addEventListener("click", function () {
+    var contenido = { categorias: categorias, productos: productos, movimientos: movimientos };
+    var texto = JSON.stringify(contenido, null, 2);   // con sangría, para que sea legible
+
+    var archivo = archivoParaCompartir(texto);
+    if (!archivo) {
+      descargarArchivo(texto);                        // no se puede compartir: descarga
+      return;
+    }
+
+    navigator.share({ files: [archivo], title: "Stock Súper Barrio" })
+      .catch(function (error) {
+        if (error && error.name === "AbortError") return;   // la persona cerró el menú: no se hace nada más
+        descargarArchivo(texto);                             // cualquier otro error: descarga
+      });
   });
 
   $("btn-importar").addEventListener("click", function () {
@@ -688,14 +725,78 @@
     if (btn) mostrarSeccion(btn.dataset.seccion);
   });
 
+  /* ---------- Aviso de conexión ---------- */
+  // Franja discreta arriba de todo (la crea este código; el estilo está en styles.css)
+  var avisoConexion = document.createElement("div");
+  avisoConexion.id = "aviso-conexion";
+  avisoConexion.setAttribute("role", "status");
+  avisoConexion.textContent = "Sin conexión: tus datos se siguen guardando en este celular";
+  avisoConexion.hidden = true;
+  document.body.insertBefore(avisoConexion, document.body.firstChild);
+
+  // Se muestra cuando el navegador informa que no hay conexión y se oculta cuando vuelve
+  function actualizarAvisoConexion() {
+    avisoConexion.hidden = navigator.onLine;
+  }
+
+  window.addEventListener("online", actualizarAvisoConexion);
+  window.addEventListener("offline", actualizarAvisoConexion);
+  actualizarAvisoConexion();   // por si la app se abre ya sin conexión
+
   cargar();
   $("mov-fecha").value = hoy();
   renderTodo();
 })();
 
-// Registrar el service worker solo si el navegador lo admite
-if ("serviceWorker" in navigator) {
+/* ==========================================================
+   SERVICE WORKER: registro y aviso de versión nueva
+   ========================================================== */
+(function () {
+  "use strict";
+
+  // Si el navegador no admite service workers, no se hace nada
+  if (!("serviceWorker" in navigator)) return;
+
+  // Franja arriba de todo que se muestra solo cuando hay una versión nueva lista
+  function mostrarAvisoActualizacion() {
+    if (document.getElementById("aviso-actualizacion")) return;   // ya está en pantalla
+    var aviso = document.createElement("div");
+    aviso.id = "aviso-actualizacion";
+    aviso.setAttribute("role", "status");
+    aviso.textContent = "Hay una versión nueva: cerrá y volvé a abrir la app";
+    document.body.insertBefore(aviso, document.body.firstChild);
+  }
+
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js");
+    navigator.serviceWorker.register("./sw.js").then(function (registro) {
+
+      // Caso 1: ya hay una versión nueva instalada y esperando (se bajó en una visita anterior)
+      if (registro.waiting && navigator.serviceWorker.controller) mostrarAvisoActualizacion();
+
+      // Caso 2: el navegador empieza a instalar una versión nueva mientras la app está abierta
+      registro.addEventListener("updatefound", function () {
+        var nuevo = registro.installing;
+        if (!nuevo) return;
+        nuevo.addEventListener("statechange", function () {
+          // "installed" = ya se guardaron todos los archivos nuevos en la caché.
+          // Si hay un service worker controlando la página, es una actualización
+          // (en la primera instalación no hay ninguno y no se muestra nada).
+          if (nuevo.state === "installed" && navigator.serviceWorker.controller) {
+            mostrarAvisoActualizacion();
+          }
+        });
+      });
+
+      // Una app instalada suele quedar abierta en segundo plano: al volver a primer plano
+      // se busca una versión nueva (si no hay conexión, se ignora)
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") {
+          registro.update().catch(function () {});
+        }
+      });
+
+    }).catch(function () {
+      // Sin sw.js o sin https: la app funciona igual, solo que sin modo sin conexión
+    });
   });
-}
+})();

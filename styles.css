@@ -425,6 +425,28 @@ tbody tr:last-child td { border-bottom: none; }
   color: var(--texto-suave);
 }
 
+/* Aviso de "sin conexión" (lo crea app.js): franja fina y discreta arriba de todo */
+#aviso-conexion {
+  padding: 6px var(--espacio);
+  font-size: 0.8rem;
+  text-align: center;
+  color: #fff;
+  background: #4B5563;
+}
+
+#aviso-conexion[hidden] { display: none; }
+
+/* Aviso de "versión nueva" (lo crea app.js): franja clara con borde mostaza */
+#aviso-actualizacion {
+  padding: 8px var(--espacio);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--texto);
+  background: var(--color-principal-claro);
+  border-bottom: 2px solid var(--color-principal);
+}
+
 /* 12. PIE ---------------------------------------------------- */
 .pie {
   padding: 20px var(--espacio);
